@@ -5,7 +5,10 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
+import com.jedi.sables.Dto.JediDTO;
 import com.jedi.sables.Dto.SableDTO;
 import com.jedi.sables.Repository.SableRepository;
 import com.jedi.sables.model.Sable;
@@ -15,6 +18,9 @@ public class SableService {
 
     @Autowired
     private SableRepository sableRepository;
+
+    @Autowired
+    private WebClient.Builder webClientBuilder;
 
     public List<SableDTO> obtenerTodos() {
         List<SableDTO> listaDTOs = new ArrayList<>();
@@ -35,9 +41,29 @@ public class SableService {
     }
 
     public SableDTO guardar(Sable nuevoSable) {
+
+        try {
+            JediDTO jedi = webClientBuilder.build()
+                    .get()
+                    .uri("http://localhost:8081/api/v1/jedis/" + nuevoSable.getJediId())
+                    .retrieve()
+                    .bodyToMono(JediDTO.class)
+                    .block();
+
+            if (jedi == null) {
+                throw new RuntimeException("No se pudo validar el Jedi asociado al sable");
+            }
+
+        } catch (WebClientResponseException.NotFound e) {
+            throw new RuntimeException("No existe un Jedi con ID: " + nuevoSable.getJediId());
+        } catch (Exception e) {
+            throw new RuntimeException("Error al comunicarse con el microservicio Jedis: " + e.getMessage());
+        }
+
         Sable guardado = sableRepository.save(nuevoSable);
         return convertirADTO(guardado);
     }
+
 
     private SableDTO convertirADTO(Sable sable) {
         SableDTO dto = new SableDTO();
