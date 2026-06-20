@@ -18,7 +18,6 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import com.jedi.jedis.Dto.JediDTO;
 import com.jedi.jedis.Service.JediService;
 import com.jedi.jedis.model.Jedi;
-
 import jakarta.validation.Valid;
 
 @Tag(name = "Jedis", description = "Operaciones para gestionar guerreros Jedi")
